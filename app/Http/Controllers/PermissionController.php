@@ -45,7 +45,7 @@ class PermissionController extends Controller
      */
     public function show(Permission $permission)
     {
-        $permission->load('roles');
+        $permission->load(['roles', 'users']);
         return view('permissions.show', compact('permission'));
     }
 
@@ -54,7 +54,9 @@ class PermissionController extends Controller
      */
     public function edit(Permission $permission)
     {
-        return view('permissions.edit', compact('permission'));
+        $permission->load('roles');
+        $roles = \Spatie\Permission\Models\Role::all();
+        return view('permissions.edit', compact('permission', 'roles'));
     }
 
     /**
@@ -64,9 +66,20 @@ class PermissionController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('permissions')->ignore($permission->id)],
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,id'
         ]);
 
         $permission->update(['name' => $request->name]);
+
+        // Sync roles if provided
+        if ($request->has('roles')) {
+            // Get role models from IDs
+            $roles = \Spatie\Permission\Models\Role::whereIn('id', $request->roles)->get();
+            $permission->syncRoles($roles);
+        } else {
+            $permission->syncRoles([]);
+        }
 
         return redirect()->route('permissions.index')
             ->with('success', 'Permission updated successfully.');

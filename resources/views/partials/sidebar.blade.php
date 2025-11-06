@@ -39,11 +39,44 @@
                     <span class="sidebar-text">Dashboard</span>
                 </a>
             </li>
+
+            <!-- Kendaraan - Direct Menu -->
+            @can('view kendaraan')
+            <li>
+                <a href="{{ route('kendaraan.index') }}" 
+                   class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group {{ request()->routeIs('kendaraan.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                    <i class="fas fa-car w-5 h-5 mr-3 text-gray-500 group-hover:text-blue-500 {{ request()->routeIs('kendaraan.*') ? 'text-blue-500' : '' }}"></i>
+                    <span class="sidebar-text">Data Kendaraan</span>
+                </a>
+            </li>
+            @endcan
+
+            <!-- Pemesanan Kendaraan - Direct Menu -->
+            @can('view pemesanan')
+            <li>
+                <a href="{{ route('pemesanan.index') }}" 
+                   class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group {{ request()->routeIs('pemesanan.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                    <i class="fas fa-calendar-check w-5 h-5 mr-3 text-gray-500 group-hover:text-blue-500 {{ request()->routeIs('pemesanan.*') ? 'text-blue-500' : '' }}"></i>
+                    <span class="sidebar-text">Pemesanan Kendaraan</span>
+                </a>
+            </li>
+            @endcan
+
+            <!-- Surat Jalan - Direct Menu -->
+            @can('view pemesanan')
+            <li>
+                <a href="{{ route('surat-jalan.index') }}" 
+                   class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group {{ request()->routeIs('surat-jalan.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                    <i class="fas fa-file-alt w-5 h-5 mr-3 text-gray-500 group-hover:text-blue-500 {{ request()->routeIs('surat-jalan.*') ? 'text-blue-500' : '' }}"></i>
+                    <span class="sidebar-text">Surat Jalan</span>
+                </a>
+            </li>
+            @endcan
             
             <!-- Management Section - Only show if user has any management permissions -->
             @if(auth()->user()->can('view users') || auth()->user()->can('view audit logs') || auth()->user()->can('view roles') || auth()->user()->can('view permissions'))
                 <li class="relative">
-                    <button onclick="toggleDropdown()" class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group management-dropdown-toggle">
                         <div class="flex items-center">
                             <i class="fas fa-users-cog w-5 h-5 mr-3 text-gray-500 group-hover:text-blue-500"></i>
                             <span class="sidebar-text">Management</span>
@@ -185,19 +218,25 @@
 </style>
 
 <script>
-// Toggle dropdown function
-function toggleDropdown() {
+// Dropdown click handler
+document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar.classList.contains('sidebar-collapsed')) {
-        return; // Don't open dropdown when sidebar is collapsed
+    
+    // Management Dropdown
+    const managementBtn = document.querySelector('.management-dropdown-toggle');
+    if (managementBtn) {
+        managementBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (sidebar.classList.contains('sidebar-collapsed')) return;
+            
+            const dropdown = document.getElementById('dropdown-content');
+            const arrow = document.getElementById('dropdown-arrow');
+            dropdown.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        });
     }
-    
-    const dropdown = document.getElementById('dropdown-content');
-    const arrow = document.getElementById('dropdown-arrow');
-    
-    dropdown.classList.toggle('hidden');
-    arrow.classList.toggle('rotate-180');
-}
+});
 
 // Toggle user dropdown function
 function toggleUserDropdown() {
@@ -278,11 +317,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const dropdown = document.getElementById('dropdown-content');
         const userDropdown = document.getElementById('user-dropdown-content');
         
-        if (!event.target.closest('.relative') && dropdown && !dropdown.classList.contains('hidden')) {
-            dropdown.classList.add('hidden');
-            document.getElementById('dropdown-arrow')?.classList.remove('rotate-180');
+        // Close Management dropdown if clicked outside
+        if (!event.target.closest('.management-dropdown-toggle') && !event.target.closest('#dropdown-content')) {
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+                document.getElementById('dropdown-arrow')?.classList.remove('rotate-180');
+            }
         }
         
+        // Close User dropdown if clicked outside
         if (!event.target.closest('.border-t') && userDropdown && !userDropdown.classList.contains('hidden')) {
             userDropdown.classList.add('hidden');
             document.getElementById('user-dropdown-arrow')?.classList.remove('rotate-180');

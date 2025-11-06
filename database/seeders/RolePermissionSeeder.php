@@ -50,6 +50,20 @@ class RolePermissionSeeder extends Seeder
             'export audit logs',
             'delete audit logs',
             
+            // Kendaraan Management
+            'view kendaraan',
+            'create kendaraan',
+            'edit kendaraan',
+            'delete kendaraan',
+            
+            // Pemesanan Kendaraan
+            'view pemesanan',
+            'create pemesanan',
+            'edit pemesanan',
+            'delete pemesanan',
+            'approve pemesanan',
+            'view all pemesanan',
+            
             // System Settings
             'manage settings',
             'view reports',
@@ -64,7 +78,62 @@ class RolePermissionSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdminRole->givePermissionTo(Permission::all());
 
-        $this->command->info('Super Admin role created with all permissions.');
+        // Create Admin Transport role
+        $adminTransportRole = Role::firstOrCreate(['name' => 'admin_transport']);
+        $adminTransportRole->givePermissionTo([
+            'view kendaraan',
+            'create kendaraan',
+            'edit kendaraan',
+            'delete kendaraan',
+            'view users',
+            'edit profile',
+            'view profile',
+            'access user dashboard',
+            'view reports',
+            'export reports',
+            'view all pemesanan',
+            'approve pemesanan',
+        ]);
+
+        // Create Admin Departemen role
+        $adminDepartemenRole = Role::firstOrCreate(['name' => 'admin_departemen']);
+        $adminDepartemenRole->givePermissionTo([
+            'view kendaraan',
+            'view users',
+            'edit profile',
+            'view profile',
+            'access user dashboard',
+            'view reports',
+            'view pemesanan',
+            'create pemesanan',
+            'edit pemesanan',
+            'delete pemesanan',
+        ]);
+
+        // Create Driver role
+        $driverRole = Role::firstOrCreate(['name' => 'driver']);
+        $driverRole->givePermissionTo([
+            'view kendaraan',
+            'edit profile',
+            'view profile',
+            'access user dashboard',
+        ]);
+
+        // Create Security role
+        $securityRole = Role::firstOrCreate(['name' => 'security']);
+        $securityRole->givePermissionTo([
+            'view kendaraan',
+            'edit profile',
+            'view profile',
+            'access user dashboard',
+        ]);
+
+        $this->command->info('All roles created successfully:');
+        $this->command->info('- Super Admin (all permissions)');
+        $this->command->info('- Admin Transport (manage kendaraan, view users, reports)');
+        $this->command->info('- Admin Departemen (view kendaraan, users, reports)');
+        $this->command->info('- Driver (view kendaraan only)');
+        $this->command->info('- Security (view kendaraan only)');
         $this->command->info('Total permissions created: ' . count($permissions));
     }
 }

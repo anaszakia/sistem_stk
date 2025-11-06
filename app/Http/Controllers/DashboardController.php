@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\AuditLog;
+use App\Models\Kendaraan;
+use App\Models\SuratJalan;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -70,8 +72,37 @@ class DashboardController extends Controller
 
     public function adminDashboard()
     {
+        // Data Kendaraan
+        $totalKendaraan = Kendaraan::count();
+        $kendaraanKosong = Kendaraan::where('status', 'kosong')->count();
+        
+        // Driver Ready (driver yang tidak sedang aktif di surat jalan)
+        $activeDriverIds = SuratJalan::where('status', 'aktif')
+            ->whereNotNull('driver_id')
+            ->pluck('driver_id')
+            ->toArray();
+        $driverReady = User::role('driver')
+            ->whereNotIn('id', $activeDriverIds)
+            ->count();
+        
+        // Kendaraan dengan Pajak Expired
+        $today = now();
+        $allKendaraan = Kendaraan::all();
+        $pajakExpired = $allKendaraan->filter(function($k) use ($today) {
+            if (!$k->pajak_stnk) return false;
+            $pajak = Carbon::parse($k->pajak_stnk);
+            return $pajak->lt($today);
+        })->count();
+        
         // Data untuk admin dashboard
         $data = [
+            // Stats Kendaraan
+            'totalKendaraan' => $totalKendaraan,
+            'kendaraanKosong' => $kendaraanKosong,
+            'driverReady' => $driverReady,
+            'pajakExpired' => $pajakExpired,
+            
+            // Stats User & Activity
             'totalUsers' => User::count(),
             'totalAdmins' => User::role('super_admin')->count(),
             'totalRegularUsers' => User::whereDoesntHave('roles', function($query) {

@@ -19,25 +19,6 @@
         @endcan
     </div>
 
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                <span class="text-green-800">{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
-                <span class="text-red-800">{{ session('error') }}</span>
-            </div>
-        </div>
-    @endif
-
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -55,19 +36,28 @@
         @php
             $allKendaraan = \App\Models\Kendaraan::all();
             $today = now();
+            
+            // Pajak Expired: tanggal pajak sudah lewat
             $expired = $allKendaraan->filter(function($k) use ($today) {
-                return $k->pajak_stnk && \Carbon\Carbon::parse($k->pajak_stnk)->lt($today);
+                if (!$k->pajak_stnk) return false;
+                $pajak = \Carbon\Carbon::parse($k->pajak_stnk);
+                return $pajak->lt($today);
             })->count();
+            
+            // Segera Expired: 0-60 hari sebelum expired (2 bulan)
             $expiringSoon = $allKendaraan->filter(function($k) use ($today) {
                 if (!$k->pajak_stnk) return false;
                 $pajak = \Carbon\Carbon::parse($k->pajak_stnk);
                 $daysDiff = $today->diffInDays($pajak, false);
-                return $daysDiff >= 0 && $daysDiff <= 30;
+                return $daysDiff >= 0 && $daysDiff <= 60;
             })->count();
+            
+            // Pajak Aktif: lebih dari 60 hari sebelum expired
             $active = $allKendaraan->filter(function($k) use ($today) {
                 if (!$k->pajak_stnk) return false;
                 $pajak = \Carbon\Carbon::parse($k->pajak_stnk);
-                return $pajak->diffInDays($today, false) > 30;
+                $daysDiff = $today->diffInDays($pajak, false);
+                return $daysDiff > 60;
             })->count();
         @endphp
         
@@ -168,7 +158,7 @@
                                         <i class="fas fa-times-circle mr-1.5"></i>
                                         Expired - {{ $pajak->format('d/m/Y') }}
                                     </span>
-                                @elseif($daysDiff <= 30)
+                                @elseif($daysDiff <= 60)
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         <i class="fas fa-exclamation-triangle mr-1.5"></i>
                                         {{ $daysDiff }} hari lagi

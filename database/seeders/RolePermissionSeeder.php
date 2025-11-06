@@ -123,6 +123,8 @@ class RolePermissionSeeder extends Seeder
         $securityRole = Role::firstOrCreate(['name' => 'security']);
         $securityRole->givePermissionTo([
             'view kendaraan',
+            'view pemesanan',
+            'view all pemesanan',
             'edit profile',
             'view profile',
             'access user dashboard',
